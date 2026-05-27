@@ -38,7 +38,7 @@ class PhononGamma(PhononWorkflow):
         print(f"Qpoints mesh for Brillouin Zone integration : {k_point_mesh}")
         phonon.run_mesh(k_point_mesh)
         print(
-            "Dispersion relations (Gamma -> Gamma) using phonopy for "
+            "Dispersion relations using phonopy for "
             + str(atoms.symbols)
             + " ..."
             + "\n"
