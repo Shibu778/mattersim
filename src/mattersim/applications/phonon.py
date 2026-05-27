@@ -15,6 +15,56 @@ from mattersim.utils.phonon_utils import (
 )
 from mattersim.utils.supercell_utils import get_supercell_parameters
 
+class PhononGamma(PhononWorkflow):
+    """
+    Subclass of PhononWorkflow designed to calculate the phonon dispersion 
+    relationship explicitly for the Gamma-to-Gamma point k-path.
+    """
+
+    @staticmethod
+    def compute_phonon_spectrum_dos(
+        atoms: Atoms, phonon: Phonopy, k_point_mesh: Union[int, Iterable[int]]
+    ):
+        """
+        Calculate phonon spectrum exclusively for the Gamma-Gamma path and 
+        compute DOS based on the force constant matrix in the phonon object.
+
+        Args:
+            atoms (Atoms): ASE atoms object to provide lattice information.
+            phonon (Phonopy): Phonopy object which contains force constants matrix.
+            k_point_mesh (Union[int, Iterable[int]]): The qpoints number in First
+                Brillouin Zone in three directions for DOS calculation.
+        """
+        print(f"Qpoints mesh for Brillouin Zone integration : {k_point_mesh}")
+        phonon.run_mesh(k_point_mesh)
+        print(
+            "Dispersion relations (Gamma -> Gamma) using phonopy for "
+            + str(atoms.symbols)
+            + " ..."
+            + "\n"
+        )
+
+        # Define Gamma to Gamma path connection
+        # A path consists of segments, here a single segment from [0,0,0] to [0,0,0]
+        gamma_path = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+        
+        # Calculate the band structure specifically for Gamma to Gamma
+        phonon.run_band_structure([gamma_path], with_eigenvectors=True)
+        
+        # Plot and save the specific Gamma-Gamma band structure
+        # Since auto_band_structure is bypassed, we plot via the initialized band_structure attribute
+        phonon.plot_band_structure().savefig(
+            f"{str(atoms.symbols)}_phonon_band.png", dpi=300
+        )
+        
+        # Calculate and plot DOS using the standard auto implementation as requested
+        phonon.auto_total_dos(plot=True, write_dat=True).savefig(
+            f"{str(atoms.symbols)}_phonon_dos.png", dpi=300
+        )
+
+        # Save additional force constants files
+        phonon.save(settings={"force_constants": True})
+
 
 class PhononWorkflow(object):
     """
